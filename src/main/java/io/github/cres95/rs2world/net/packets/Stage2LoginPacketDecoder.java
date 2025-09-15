@@ -8,6 +8,7 @@ import io.github.cres95.rs2world.net.util.RS2BufferOps;
 import java.nio.ByteBuffer;
 
 public class Stage2LoginPacketDecoder implements PacketDecoder {
+
     @Override
     public Packet decode(ByteBuffer buffer, ISAACCipher decryptor) {
         if (buffer.remaining() < 2) return null;
@@ -40,7 +41,6 @@ public class Stage2LoginPacketDecoder implements PacketDecoder {
         @Override
         public void execute(Client client, WorldCycleContext ctx) {
             System.out.printf("Login request with username: %s and password: %s%n", username, password);
-
         }
     }
 }

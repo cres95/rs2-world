@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Configuration;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -30,8 +29,6 @@ public class ServerConfig {
         serverSocketChannel.bind(new InetSocketAddress(properties.getHost(), properties.getPort()));
         serverSocketChannel.configureBlocking(false);
         serverSocketChannel.register(selector(), SelectionKey.OP_ACCEPT);
-        Socket socket = new Socket("127.0.0.1", 43594);
-
         return serverSocketChannel;
     }
 
@@ -61,7 +58,7 @@ public class ServerConfig {
     }
 
     @Bean
-    ExecutorService threadPoolExecutor(ServerProperties properties, @Qualifier("cleaningThreadFactory") ThreadFactory cleaningThreadFactory) {
+    ExecutorService workers(ServerProperties properties, @Qualifier("cleaningThreadFactory") ThreadFactory cleaningThreadFactory) {
         return new ThreadPoolExecutor(
                 properties.getCorePoolSize(),
                 properties.getMaxPoolSize(),

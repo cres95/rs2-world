@@ -1,14 +1,13 @@
 package io.github.cres95.rs2world.net;
 
 import io.github.cres95.rs2world.net.util.BufferLease;
+import io.github.cres95.rs2world.Rs2WorldProcess;
 import io.github.cres95.rs2world.util.SystemTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -19,9 +18,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 
 @Component
-public class Server {
+public class ServerProcess implements Rs2WorldProcess {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Server.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ServerProcess.class);
 
     private final Selector selector;
     private final ServerSocketChannel serverSocketChannel;
@@ -31,12 +30,12 @@ public class Server {
     private final ClientService clientService;
     private final SystemTimer batchAcceptTimer = new SystemTimer();
 
-    public Server(Selector selector,
-                  ServerSocketChannel serverSocketChannel,
-                  ExecutorService workers,
-                  Supplier<BufferLease> bufferLeaseSupplier,
-                  ServerProperties properties,
-                  ClientService clientService) {
+    public ServerProcess(Selector selector,
+                         ServerSocketChannel serverSocketChannel,
+                         ExecutorService workers,
+                         Supplier<BufferLease> bufferLeaseSupplier,
+                         ServerProperties properties,
+                         ClientService clientService) {
         this.selector = selector;
         this.serverSocketChannel = serverSocketChannel;
         this.workers = workers;
@@ -45,20 +44,29 @@ public class Server {
         this.clientService = clientService;
     }
 
-    @Scheduled(fixedRate = 100L)
-    public void cycle() throws IOException {
-        selector.selectNow();
-        Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
-        while (iterator.hasNext()) {
-            SelectionKey key = iterator.next();
-            if (key.isAcceptable() && batchAcceptTimer.resetOnElapsed(properties.getBatchAcceptDelay())) {
-                workers.submit(this::batchAccept);
+    @Override
+    public void run() {
+        try {
+            selector.selectNow();
+            Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
+            while (iterator.hasNext()) {
+                SelectionKey key = iterator.next();
+                if (key.isAcceptable() && batchAcceptTimer.resetOnElapsed(properties.getBatchAcceptDelay())) {
+                    workers.submit(this::batchAccept);
+                }
+                if (key.isReadable()) {
+                    workers.submit(() -> read(key));
+                }
+                iterator.remove();
             }
-            if (key.isReadable()) {
-                workers.submit(() -> read(key));
-            }
-            iterator.remove();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public long cycleRate() {
+        return 100L;
     }
 
     private void batchAccept() {

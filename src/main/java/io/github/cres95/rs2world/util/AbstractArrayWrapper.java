@@ -83,4 +83,13 @@ abstract class AbstractArrayWrapper<E> implements ArrayWrapper<E> {
     public E replace(int index, E e) {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public int count() {
+        int count = 0;
+        for (E element : elements) {
+            if (element != null) count++;
+        }
+        return count;
+    }
 }

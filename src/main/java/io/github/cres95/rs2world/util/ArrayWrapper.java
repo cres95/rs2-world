@@ -38,4 +38,6 @@ public interface ArrayWrapper<E> {
 
     E replace(int index, E e);
 
+    int count();
+
 }

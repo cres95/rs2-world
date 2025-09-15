@@ -8,6 +8,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -61,6 +62,7 @@ public class Server {
     }
 
     private void batchAccept() {
+        LOGGER.debug("Attempting accepts");
         ByteBuffer buffer = bufferLeaseSupplier.get().buffer();
         for (int i = 0; i < properties.getBatchAcceptAttempts(); i++) {
             SelectionKey key = null;
@@ -75,6 +77,7 @@ public class Server {
                 channel.configureBlocking(false);
                 key = channel.register(selector, SelectionKey.OP_READ);
                 Client client = clientService.register(channel, key);
+                LOGGER.debug("New connection!");
                 key.attach(client);
             } catch (IOException ioe) {
                 LOGGER.error("Critical error during accept cycle; ", ioe);

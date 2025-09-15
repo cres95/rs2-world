@@ -1,11 +1,20 @@
 package io.github.cres95.rs2world.util;
 
+import java.util.concurrent.TimeUnit;
+
 public class SystemTimer {
 
     private long lastMeasure;
+    private final TimeUnit timeUnit;
 
     public SystemTimer() {
-        this.lastMeasure = System.nanoTime();
+        reset();
+        this.timeUnit = TimeUnit.MILLISECONDS;
+    }
+
+    public SystemTimer(TimeUnit timeUnit) {
+        reset();
+        this.timeUnit = timeUnit;
     }
 
     public long elapsed() {
@@ -13,7 +22,7 @@ public class SystemTimer {
     }
 
     public boolean elapsed(long time) {
-        return elapsed() >= time;
+        return elapsed() >= toNanos(time);
     }
 
     public void reset() {
@@ -21,8 +30,12 @@ public class SystemTimer {
     }
 
     public boolean resetOnElapsed(long time) {
-        boolean elapsed = elapsed(time);
+        boolean elapsed = elapsed(toNanos(time));
         if (elapsed) reset();
         return elapsed;
+    }
+
+    private long toNanos(long time) {
+        return TimeUnit.NANOSECONDS.convert(time, timeUnit);
     }
 }

@@ -49,6 +49,11 @@ public class ClientService implements WorldCycleAware {
 
     @Override
     public void cycle(WorldCycleContext ctx) {
-        clients.forEach(c -> c.cycle(ctx));
+        clients.forEach(c -> {
+            c.cycle(ctx);
+            if (c.isDisconnected()) {
+                clients.set(c.getId(), null);
+            }
+        });
     }
 }

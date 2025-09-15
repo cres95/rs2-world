@@ -6,6 +6,8 @@ import io.github.cres95.rs2world.net.packets.Packet;
 import io.github.cres95.rs2world.net.packets.PacketDecoder;
 import io.github.cres95.rs2world.net.util.BufferLease;
 import io.github.cres95.rs2world.util.SystemTimer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -15,6 +17,8 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 public class Client implements WorldCycleAware {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Client.class);
 
     private static final long TIMEOUT_THRESHOLD = 10000L;
 
@@ -40,6 +44,10 @@ public class Client implements WorldCycleAware {
         this.timeoutTimer = new SystemTimer();
         this.packetDecoder = packetDecoder;
         this.disconnected = false;
+    }
+
+    public int getId() {
+        return id;
     }
 
     public void flushOutBuffer() {
@@ -100,7 +108,7 @@ public class Client implements WorldCycleAware {
 
     @Override
     public void cycle(WorldCycleContext ctx) {
-        if (timeoutTimer.elapsed(TIMEOUT_THRESHOLD)) {
+        if (timeoutTimer.elapsed(TIMEOUT_THRESHOLD) && !isDisconnected()) {
             disconnect();
         }
         synchronized (packetQueue) {

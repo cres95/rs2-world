@@ -1,5 +1,6 @@
 package io.github.cres95.rs2world.net;
 
+import io.github.cres95.rs2world.net.packets.PacketDecoder;
 import io.github.cres95.rs2world.net.util.BufferLease;
 import io.github.cres95.rs2world.net.util.BufferPool;
 import io.github.cres95.rs2world.net.util.CleaningThread;
@@ -12,7 +13,9 @@ import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.concurrent.*;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 @Configuration
@@ -66,6 +69,11 @@ public class ServerConfig {
                 TimeUnit.SECONDS,
                 new LinkedBlockingQueue<>(),
                 cleaningThreadFactory);
+    }
+
+    @Bean
+    BiFunction<SelectionKey, SocketChannel, Client> clientGenerator(BufferPool bufferPool) {
+        return (key, channel) -> new Client(bufferPool.lease(), key, channel, PacketDecoder.STAGE_1_LOGIN_PACKET_DECODER);
     }
 
 }

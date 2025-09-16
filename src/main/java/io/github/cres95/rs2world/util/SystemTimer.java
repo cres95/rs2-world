@@ -30,7 +30,7 @@ public class SystemTimer {
     }
 
     public boolean resetOnElapsed(long time) {
-        boolean elapsed = elapsed(toNanos(time));
+        boolean elapsed = elapsed(time);
         if (elapsed) reset();
         return elapsed;
     }

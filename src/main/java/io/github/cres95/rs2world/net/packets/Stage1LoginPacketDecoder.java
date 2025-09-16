@@ -1,9 +1,8 @@
 package io.github.cres95.rs2world.net.packets;
 
-import io.github.cres95.rs2world.core.WorldCycleContext;
+import io.github.cres95.rs2world.login.LoginRequestCode;
+import io.github.cres95.rs2world.login.LoginResponseCode;
 import io.github.cres95.rs2world.net.Client;
-import io.github.cres95.rs2world.net.login.LoginRequestCode;
-import io.github.cres95.rs2world.net.login.LoginResponseCode;
 import io.github.cres95.rs2world.net.util.ISAACCipher;
 
 import java.nio.ByteBuffer;
@@ -20,16 +19,20 @@ public class Stage1LoginPacketDecoder implements PacketDecoder {
 
     private record Stage1LoginPacket(int requestCode) implements Packet {
         @Override
-        public void execute(Client client, WorldCycleContext ctx) {
+        public void execute(Client client, PacketContext ctx) {
             int response = requestCode == LoginRequestCode.CONNECTION_REQUEST
                     ? LoginResponseCode.PROCEED_TO_LOGIN
                     : LoginResponseCode.BAD_SESSION_ID;
-            client.getOutBuffer().clear();
-            client.getOutBuffer().putLong(0L);
-            client.getOutBuffer().put((byte) response);
-            client.getOutBuffer().putLong(ctx.generateServerSessionKey());
-            client.flushOutBuffer();
-            client.setPacketDecoder(STAGE_2_LOGIN_PACKET_DECODER);
+            client.send(b -> {
+                b.putLong(0L);
+                b.put((byte) response);
+                b.putLong(ctx.generateServerSessionKey());
+            });
+            if (response == LoginResponseCode.PROCEED_TO_LOGIN) {
+                client.setPacketDecoder(STAGE_2_LOGIN_PACKET_DECODER);
+            } else {
+                client.disconnect();
+            }
         }
     }
 

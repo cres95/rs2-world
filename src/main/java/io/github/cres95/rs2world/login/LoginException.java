@@ -1,4 +1,4 @@
-package io.github.cres95.rs2world.net.login;
+package io.github.cres95.rs2world.login;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -1,13 +1,13 @@
-package io.github.cres95;
+package com.einherji.rs2world;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class Rs2WorldProcessApplicationTests {
+class Rs2WorldCycleProcessApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
+    @Test
+    void contextLoads() {
+    }
 
 }

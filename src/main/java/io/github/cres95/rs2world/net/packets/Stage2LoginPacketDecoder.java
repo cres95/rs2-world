@@ -1,6 +1,5 @@
 package io.github.cres95.rs2world.net.packets;
 
-import io.github.cres95.rs2world.core.WorldCycleContext;
 import io.github.cres95.rs2world.net.Client;
 import io.github.cres95.rs2world.net.util.ISAACCipher;
 import io.github.cres95.rs2world.net.util.RS2BufferOps;
@@ -39,7 +38,7 @@ public class Stage2LoginPacketDecoder implements PacketDecoder {
                                      long serverSessionKey) implements Packet {
 
         @Override
-        public void execute(Client client, WorldCycleContext ctx) {
+        public void execute(Client client, PacketContext ctx) {
             System.out.printf("Login request with username: %s and password: %s%n", username, password);
         }
     }

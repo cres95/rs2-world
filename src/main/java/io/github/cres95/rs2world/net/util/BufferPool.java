@@ -38,4 +38,8 @@ public class BufferPool {
             pool.add(buffer);
         }
     }
+
+    public int getEstimatedTotalSize() {
+        return size.get() * bufferSize;
+    }
 }

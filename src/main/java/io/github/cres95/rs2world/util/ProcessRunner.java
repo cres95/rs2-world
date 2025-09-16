@@ -1,4 +1,4 @@
-package io.github.cres95.rs2world;
+package io.github.cres95.rs2world.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,15 +13,15 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 @Component
-public class RS2WorldProcesses implements CommandLineRunner {
+public class ProcessRunner implements CommandLineRunner {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RS2WorldProcesses.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProcessRunner.class);
 
     private final ScheduledExecutorService scheduledExecutorService;
-    private final List<Rs2WorldProcess> processes;
+    private final List<Process> processes;
     private final List<ScheduledFuture<?>> futures;
 
-    public RS2WorldProcesses(List<Rs2WorldProcess> processes) {
+    public ProcessRunner(List<Process> processes) {
         this.scheduledExecutorService = Executors.newScheduledThreadPool(processes.size());
         this.processes = processes;
         this.futures = new ArrayList<>(processes.size());
@@ -30,7 +30,7 @@ public class RS2WorldProcesses implements CommandLineRunner {
     @Override
     public void run(String... args) {
         processes.forEach(p -> futures.add(scheduledExecutorService.scheduleAtFixedRate(p, 0, p.cycleRate(), TimeUnit.MILLISECONDS)));
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> processes.forEach(Rs2WorldProcess::onShutdown)));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> processes.forEach(Process::onShutdown)));
     }
 
     public void shutdown() {

@@ -1,13 +1,13 @@
 package io.github.cres95.rs2world.net;
 
-import io.github.cres95.rs2world.core.WorldCycleAware;
-import io.github.cres95.rs2world.core.WorldCycleContext;
+import io.github.cres95.rs2world.net.packets.PacketContext;
 import io.github.cres95.rs2world.net.packets.Packet;
 import io.github.cres95.rs2world.net.packets.PacketDecoder;
 import io.github.cres95.rs2world.net.util.BufferLease;
 import io.github.cres95.rs2world.util.SystemTimer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.Assert;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -15,14 +15,14 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.function.Consumer;
 
-public class Client implements WorldCycleAware {
+public class Client {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Client.class);
 
     private static final long TIMEOUT_THRESHOLD = 10000L;
 
-    private final int id;
     private final BufferLease outBufferLease;
     private final Queue<Packet> packetQueue;
     private final SelectionKey selectionKey;
@@ -31,12 +31,10 @@ public class Client implements WorldCycleAware {
     private PacketDecoder packetDecoder;
     private boolean disconnected;
 
-    public Client(int id,
-                   BufferLease bufferLease,
+    public Client(BufferLease bufferLease,
                    SelectionKey key,
                    SocketChannel channel,
                    PacketDecoder packetDecoder) {
-        this.id = id;
         this.outBufferLease = bufferLease;
         this.packetQueue = new LinkedList<>();
         this.selectionKey = key;
@@ -46,28 +44,20 @@ public class Client implements WorldCycleAware {
         this.disconnected = false;
     }
 
-    public int getId() {
-        return id;
+    public void send(Consumer<ByteBuffer> instructions) {
+        Assert.notNull(instructions, "'instructions' must not be null");
+        ByteBuffer buffer = outBufferLease.buffer();
+        buffer.clear();
+        instructions.accept(buffer);
+        flushOutBuffer();
     }
 
-    public void flushOutBuffer() {
-        try {
-            ByteBuffer buffer = outBufferLease.buffer();
-            buffer.flip();
-            while (buffer.hasRemaining()) {
-                socketChannel.write(buffer);
-            }
-            buffer.clear();
-        } catch(IOException e) {
-            disconnect();
-        }
-    }
-
-    public void readAndDecode(ByteBuffer in) {
+    public void decode(ByteBuffer in) {
         try {
             int readBytes = socketChannel.read(in);
             if (readBytes == -1) {
-                //error
+                disconnect();
+                return;
             }
         } catch(IOException ioe) {
             disconnect();
@@ -87,11 +77,8 @@ public class Client implements WorldCycleAware {
         this.packetDecoder = packetDecoder;
     }
 
-    public ByteBuffer getOutBuffer() {
-        return outBufferLease.buffer();
-    }
-
-    void disconnect() {
+    public void disconnect() {
+        if (disconnected) return;
         this.disconnected = true;
         this.outBufferLease.close();
         this.selectionKey.cancel();
@@ -106,16 +93,29 @@ public class Client implements WorldCycleAware {
         return disconnected;
     }
 
-    @Override
-    public void cycle(WorldCycleContext ctx) {
+    public void processQueuedPackets(PacketContext ctx) {
         if (timeoutTimer.elapsed(TIMEOUT_THRESHOLD) && !isDisconnected()) {
             disconnect();
+            return;
         }
         synchronized (packetQueue) {
             Packet packet = null;
             while ((packet = packetQueue.poll()) != null) {
                 packet.execute(this, ctx);
             }
+        }
+    }
+
+    private void flushOutBuffer() {
+        try {
+            ByteBuffer buffer = outBufferLease.buffer();
+            buffer.flip();
+            while (buffer.hasRemaining()) {
+                socketChannel.write(buffer);
+            }
+            buffer.clear();
+        } catch(IOException e) {
+            disconnect();
         }
     }
 }

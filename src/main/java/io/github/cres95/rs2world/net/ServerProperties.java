@@ -4,7 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConfigurationProperties("rs2.server")
+@ConfigurationProperties("rs2.net")
 public class ServerProperties {
 
     private int port = 43594;
@@ -15,7 +15,6 @@ public class ServerProperties {
     private int bufferSize = 2048;
     private long batchAcceptDelay = 2000L;
     private int batchAcceptAttempts = 5;
-    private int capacity = 10;
 
     public int getPort() {
         return port;
@@ -79,13 +78,5 @@ public class ServerProperties {
 
     public void setBatchAcceptAttempts(int batchAcceptAttempts) {
         this.batchAcceptAttempts = batchAcceptAttempts;
-    }
-
-    public int getCapacity() {
-        return capacity;
-    }
-
-    public void setCapacity(int capacity) {
-        this.capacity = capacity;
     }
 }

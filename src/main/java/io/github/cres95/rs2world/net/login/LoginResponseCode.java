@@ -1,4 +1,4 @@
-package io.github.cres95.rs2world.login;
+package io.github.cres95.rs2world.net.login;
 
 public class LoginResponseCode {
 

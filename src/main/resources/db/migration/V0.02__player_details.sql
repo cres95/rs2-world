@@ -1,0 +1,1 @@
+ALTER TABLE player RENAME TO player_details;

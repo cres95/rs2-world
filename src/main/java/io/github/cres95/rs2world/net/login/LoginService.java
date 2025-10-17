@@ -1,6 +1,7 @@
 package io.github.cres95.rs2world.net.login;
 
-import io.github.cres95.rs2world.net.HostService;
+import io.github.cres95.rs2world.net.login.host.HostEvent;
+import io.github.cres95.rs2world.net.login.host.HostService;
 import io.github.cres95.rs2world.net.login.playerdetails.PlayerDetails;
 import io.github.cres95.rs2world.net.login.playerdetails.PlayerDetailsService;
 import io.github.cres95.rs2world.net.LoginDecoder;
@@ -23,10 +24,12 @@ public class LoginService {
     private final SecureRandom sessionGen = new SecureRandom();
     private final ScheduledExecutorService executorService;
     private final PlayerDetailsService playerDetailsService;
+    private final HostService hostService;
 
     public LoginService(HostService hostService, PlayerDetailsService playerDetailsService) {
         this.playerDetailsService = playerDetailsService;
         this.executorService = Executors.newSingleThreadScheduledExecutor();
+        this.hostService = hostService;
         this.executorService.scheduleWithFixedDelay(hostService::prune, 5, 5, TimeUnit.MINUTES);
     }
 
@@ -52,6 +55,7 @@ public class LoginService {
                 details.ifPresentOrElse(pd -> handleExistingPlayer(pd, request), () -> handleNewPlayer(request));
             }
         } catch(LoginException e) {
+            request.client().host().event(HostEvent.LOGIN_ATTEMPT);
             request.client().sendRaw(b -> b.writeByte(e.getResponseCode()));
             request.client().disconnect();
         }
@@ -62,11 +66,10 @@ public class LoginService {
     }
 
     private void handleExistingPlayer(PlayerDetails details, LoginRequest request) {
-        if (request.client().host().reachedLoginAttemptLimit()) {
+        if (hostService.checkFor(request.client().host(), HostEvent.LOGIN_ATTEMPT)) {
             throw LoginException.forResponse(LoginResponseCode.LOGIN_ATTEMPTS_EXCEEDED);
         }
         if (!details.getPassword().equals(request.password())) {
-            request.client().host().onFailedLogin();
             throw LoginException.forResponse(LoginResponseCode.INVALID_CREDENTIALS);
         }
         if (details.isBanned() || details.getBannedUntil() != null && details.getBannedUntil().isAfter(Instant.now())) {
@@ -75,9 +78,9 @@ public class LoginService {
     }
 
     private void handleNewPlayer(LoginRequest request) {
-        if (request.client().host().reachedAccountCreationLimit()) {
+        if (hostService.checkFor(request.client().host(), HostEvent.ACCOUNT_CREATION)) {
             throw LoginException.forResponse(LoginResponseCode.LOGIN_ATTEMPTS_EXCEEDED);
         }
-        request.client().host().onAccountCreation();
+        request.client().host().event(HostEvent.ACCOUNT_CREATION);
     }
 }

@@ -1,5 +1,8 @@
 package io.github.cres95.rs2world.net;
 
+import io.github.cres95.rs2world.net.login.host.Host;
+import io.github.cres95.rs2world.net.login.host.HostEvent;
+import io.github.cres95.rs2world.net.login.host.HostService;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import org.slf4j.Logger;
@@ -23,8 +26,8 @@ public class ClientInitializer extends ChannelInitializer<SocketChannel> {
     @Override
     protected void initChannel(SocketChannel ch) throws Exception {
         Host host = hostService.touch(ch.remoteAddress().getHostString());
-        host.onConnectionAttempt();
-        if (host.reachedThrottleLimit()) {
+        host.event(HostEvent.CONNECTION_ATTEMPT);
+        if (hostService.checkFor(host, HostEvent.CONNECTION_ATTEMPT)) {
             ch.disconnect();
             return;
         }

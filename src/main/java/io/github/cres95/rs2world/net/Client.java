@@ -1,5 +1,6 @@
 package io.github.cres95.rs2world.net;
 
+import io.github.cres95.rs2world.net.login.host.Host;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.util.AttributeKey;

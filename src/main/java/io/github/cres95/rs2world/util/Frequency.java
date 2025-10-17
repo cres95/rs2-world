@@ -1,5 +1,7 @@
 package io.github.cres95.rs2world.util;
 
+import org.springframework.boot.convert.DurationStyle;
+
 import java.time.Duration;
 import java.time.format.DateTimeParseException;
 import java.util.regex.Matcher;
@@ -17,8 +19,8 @@ public class Frequency {
     private final long occurrences;
     private final Duration duration;
 
-    private Frequency(long occurences, Duration duration) {
-        this.occurrences = occurences;
+    private Frequency(long occurrences, Duration duration) {
+        this.occurrences = occurrences;
         this.duration = duration;
     }
 
@@ -27,7 +29,7 @@ public class Frequency {
         try {
             if (matcher.find()) {
                 long occurrences = Long.parseLong(matcher.group(1));
-                Duration duration = Duration.parse(matcher.group(2));
+                Duration duration = DurationStyle.detectAndParse(matcher.group(2));
                 return new Frequency(occurrences, duration);
             } else {
                 throw new IllegalArgumentException("'%s' is not a valid Frequency format".formatted(text));

@@ -1,4 +1,4 @@
-package io.github.cres95.rs2world.net.login.playerdetails;
+package io.github.cres95.rs2world.account;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -7,7 +7,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-public class PlayerDetails {
+public class Account {
 
     @Id
     private UUID uuid;
@@ -18,10 +18,10 @@ public class PlayerDetails {
     private Instant bannedUntil;
     private boolean banned;
 
-    public PlayerDetails() {
+    public Account() {
     }
 
-    public PlayerDetails(String loginName, String password) {
+    public Account(String loginName, String password) {
         this.uuid = UUID.randomUUID();
         this.loginName = loginName;
         this.displayName = loginName;

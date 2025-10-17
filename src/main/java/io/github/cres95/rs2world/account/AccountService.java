@@ -1,4 +1,4 @@
-package io.github.cres95.rs2world.net.login.playerdetails;
+package io.github.cres95.rs2world.account;
 
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -7,15 +7,15 @@ import java.util.Optional;
 
 @Component
 @Transactional(readOnly = true)
-public class PlayerDetailsService {
+public class AccountService {
 
-    private final PlayerDetailsJpaRepository repository;
+    private final AccountJpaRepository repository;
 
-    public PlayerDetailsService(PlayerDetailsJpaRepository repository) {
+    public AccountService(AccountJpaRepository repository) {
         this.repository = repository;
     }
 
-    public Optional<PlayerDetails> findByLoginName(String loginName) {
+    public Optional<Account> findByLoginName(String loginName) {
         return repository.findByLoginName(loginName);
     }
 }

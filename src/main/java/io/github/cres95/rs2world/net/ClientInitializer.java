@@ -27,11 +27,7 @@ public class ClientInitializer extends ChannelInitializer<SocketChannel> {
     protected void initChannel(SocketChannel ch) throws Exception {
         Host host = hostService.touch(ch.remoteAddress().getHostString());
         host.event(HostEvent.CONNECTION_ATTEMPT);
-        if (hostService.checkFor(host, HostEvent.CONNECTION_ATTEMPT)) {
-            ch.disconnect();
-            return;
-        }
-
+        hostService.validateFor(host, HostEvent.CONNECTION_ATTEMPT);
         host.onConnect();
         ch.attr(Client.ATTR_KEY).set(new Client(ch, host));
         ch.pipeline().addLast("decoder", connectionDecoder);

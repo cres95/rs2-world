@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import java.net.InetSocketAddress;
 
 @Component
-public class Server {
+public class Server extends Thread {
 
     private final EventLoopGroup bossGroup;
     private final EventLoopGroup workerGroup;
@@ -19,6 +19,7 @@ public class Server {
     private final ServerProperties properties;
 
     public Server(ServerProperties properties, ClientInitializer clientInitializer) {
+        super("server");
         this.bossGroup = new NioEventLoopGroup(1);
         this.workerGroup = new NioEventLoopGroup(properties.getWorkers());
         this.properties = properties;
@@ -31,13 +32,14 @@ public class Server {
                 .childHandler(clientInitializer);
     }
 
-    public void start() {
+    @Override
+    public void run() {
         try {
-            Channel channel = this.bootstrap
-                    .bind(new InetSocketAddress(properties.getHost(), properties.getPort()))
+            this.bootstrap.bind(new InetSocketAddress(properties.getHost(), properties.getPort()))
                     .sync()
-                    .channel();
-            channel.closeFuture().sync();
+                    .channel()
+                    .closeFuture()
+                    .sync();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         } finally {
@@ -45,4 +47,5 @@ public class Server {
             workerGroup.shutdownGracefully();
         }
     }
+
 }

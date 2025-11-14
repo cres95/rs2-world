@@ -7,15 +7,20 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
+
+import java.util.function.Supplier;
 
 @Component @ChannelHandler.Sharable
 public class ConnectionDecoder extends ChannelInboundHandlerAdapter {
 
     private final LoginService loginService;
+    private final Supplier<LoginDecoder> loginDecoderSupplier;
 
-    public ConnectionDecoder(LoginService loginService) {
+    public ConnectionDecoder(LoginService loginService, ApplicationEventPublisher applicationEventPublisher) {
         this.loginService = loginService;
+        this.loginDecoderSupplier = () -> new LoginDecoder(applicationEventPublisher);
     }
 
     @Override
@@ -28,13 +33,13 @@ public class ConnectionDecoder extends ChannelInboundHandlerAdapter {
         int requestCode = buffer.readByte() & 0xff;
         buffer.readByte();
         if (requestCode == LoginRequestCode.CONNECTION_REQUEST) {
-            client.sendRaw(b -> {
+            client.send(b -> {
                 b.writeLong(0L);
                 b.writeByte(LoginResponseCode.PROCEED_TO_LOGIN);
                 b.writeLong(loginService.generateServerSessionKey());
             });
             ctx.pipeline().remove("decoder");
-            ctx.pipeline().addLast("decoder", loginService.newLoginDecoder());
+            ctx.pipeline().addLast("decoder", loginDecoderSupplier.get());
         } else {
             client.disconnect();
         }

@@ -86,9 +86,20 @@ public class ISAACCipher {
      *
      * @param seed The seed.
      */
-    public ISAACCipher(int[] seed) {
+    private ISAACCipher(int[] seed) {
         System.arraycopy(seed, 0, results, 0, seed.length);
         init(true);
+    }
+
+    public static ISAACCipher asDecryptor(int[] seed) {
+        return new ISAACCipher(seed);
+    }
+
+    public static ISAACCipher asEncryptor(int[] seed) {
+        int[] copy = new int[seed.length];
+        System.arraycopy(seed, 0, copy, 0, seed.length);
+        for (int i = 0; i < seed.length; i++) seed[i] += 50;
+        return new ISAACCipher(copy);
     }
 
     /**

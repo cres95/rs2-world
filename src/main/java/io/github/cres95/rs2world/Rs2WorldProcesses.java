@@ -1,4 +1,4 @@
-package io.github.cres95.rs2world.util;
+package io.github.cres95.rs2world;
 
 import io.github.cres95.rs2world.net.Server;
 import org.slf4j.Logger;
@@ -7,19 +7,22 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ProcessRunner implements CommandLineRunner {
+public class Rs2WorldProcesses implements CommandLineRunner {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ProcessRunner.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Rs2WorldProcesses.class);
 
     private final Server server;
+    private final Engine engine;
 
-    public ProcessRunner(Server server) {
+    public Rs2WorldProcesses(Server server, Engine engine) {
         this.server = server;
+        this.engine = engine;
     }
 
     @Override
     public void run(String... args) {
         server.start();
+        engine.start();
     }
 
 }

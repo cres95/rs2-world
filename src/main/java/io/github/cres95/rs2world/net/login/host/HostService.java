@@ -1,5 +1,6 @@
 package io.github.cres95.rs2world.net.login.host;
 
+import io.github.cres95.rs2world.net.login.LoginException;
 import io.github.cres95.rs2world.util.Frequency;
 import org.springframework.stereotype.Component;
 
@@ -28,9 +29,12 @@ public class HostService {
         return host;
     }
 
-    public boolean checkFor(Host host, HostEvent event) {
+    public void validateFor(Host host, HostEvent event) {
         Frequency frequency = eventFrequencies.get(event);
-        return updateAndCountEvents(host, event, frequency.getDuration().toMillis()) < frequency.getOccurrences();
+        if (frequency == null) return;
+        if (updateAndCountEvents(host, event, frequency.getDuration().toMillis()) >= frequency.getOccurrences()) {
+            throw LoginException.forResponse(event.getErrorCode());
+        }
     }
 
     private int updateAndCountEvents(Host host, HostEvent event, long duration) {
@@ -48,11 +52,11 @@ public class HostService {
 
     private boolean isInactive(Host host) {
         for (HostEvent event : HostEvent.values()) {
-            if (updateAndCountEvents(host, event, eventFrequencies.get(event).getDuration().toMillis()) != 0) {
+            if (updateAndCountEvents(host, event, eventFrequencies.get(event).getDuration().toMillis()) > 0) {
                 return false;
             }
         }
-        return host.getCurrentConnections() <= 0;
+        return host.getCurrentConnections() == 0;
     }
 
 }
